@@ -2,70 +2,38 @@
 using System.Linq;
 using Unity.HLODSystem.Streaming;
 using Unity.HLODSystem.Utils;
-using System.Collections;
-using System.Collections.Generic;
 using Unity.HLODSystem.SpaceManager;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Unity.HLODSystem
 {
     [CustomEditor(typeof(TerrainHLOD))]
-    public class TerrainHLODEditor : Editor
+    public partial class TerrainHLODEditor : Editor
     {
-        public static class Styles
-        {
-            public static GUIContent SourceText = new GUIContent("Source");
-            public static GUIContent DestoryTerrainText = new GUIContent("Destroy terrain", "Destory original terrain when build time.");
-            public static GUIContent GenerateButtonEnable = new GUIContent("Generate", "Generate a HLOD mesh.");
-            public static GUIContent GenerateButtonExists = new GUIContent("Generate", "HLOD already generated.");
-            public static GUIContent DestroyButtonEnable = new GUIContent("Destroy", "Destroy a HLOD mesh.");
-            public static GUIContent DestroyButtonNotExists = new GUIContent("Destroy", "You need to generate HLOD before the destroy.");
-            
-            public static int[] TextureSizes = new int[]
-            {
-                4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096
-            };
-            public static string[] TextureSizeStrings;
-            
-            public static GUIStyle RedTextColor = new GUIStyle();
-
-            static Styles()
-            {
-                TextureSizeStrings = new string[TextureSizes.Length];
-                for (int i = 0; i < TextureSizes.Length; ++i)
-                {
-                    TextureSizeStrings[i] = TextureSizes[i].ToString();
-                }
-                
-                RedTextColor.normal.textColor = Color.red;
-            }
-        }        
+        SerializedProperty m_TerrainDataProperty;
+        SerializedProperty m_DestoryTerrainProperty;
+        SerializedProperty m_ChunkSizeProperty;
+        SerializedProperty m_BorderVertexCountProperty;
+        SerializedProperty m_LODDistanceProperty;
+        SerializedProperty m_CullDistanceProperty;
         
-        private SerializedProperty m_TerrainDataProperty;
-        private SerializedProperty m_DestoryTerrainProperty;
-        private SerializedProperty m_ChunkSizeProperty;
-        private SerializedProperty m_BorderVertexCountProperty;
-        private SerializedProperty m_LODDistanceProperty;
-        private SerializedProperty m_CullDistanceProperty;
-        
-        private Type[] m_SimplifierTypes;
-        private string[] m_SimplifierNames;
+        Type[] m_SimplifierTypes;
+        string[] m_SimplifierNames;
 
-        private Type[] m_StreamingTypes;
-        private string[] m_StreamingNames;
+        Type[] m_StreamingTypes;
+        string[] m_StreamingNames;
         
-        private LODSlider m_LODSlider;
+        LODSlider m_LODSlider;
         
-        private bool isShowCommon = true;
-        private bool isShowSimplifier = true;
-        private bool isShowMaterial = true;
-        private bool isShowStreaming = true;
+        bool isShowCommon = true;
+        bool isShowSimplifier = true;
+        bool isShowMaterial = true;
+        bool isShowStreaming = true;
 
-        private bool isShowTexturePropertices = true;
+        bool isShowTexturePropertices = true;
 
-        private ISpaceSplitter m_splitter = new QuadTreeSpaceSplitter(null);
+        ISpaceSplitter m_splitter = new QuadTreeSpaceSplitter(null);
         
         void OnEnable()
         {
@@ -84,15 +52,16 @@ namespace Unity.HLODSystem
             m_SimplifierTypes = Simplifier.SimplifierTypes.GetTypes();
             m_SimplifierNames = m_SimplifierTypes.Select(t => t.Name).ToArray();
 
-            m_StreamingTypes = Streaming.StreamingBuilderTypes.GetTypes();
+            m_StreamingTypes = StreamingBuilderTypes.GetTypes();
             m_StreamingNames = m_StreamingTypes.Select(t => t.Name).ToArray();
         }
+        
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
             EditorGUI.BeginChangeCheck();
             
-            TerrainHLOD hlod = target as TerrainHLOD;
+            var hlod = target as TerrainHLOD;
             if (hlod == null)
             {
                 EditorGUILayout.LabelField("TerrainHLOD is null.");
@@ -100,7 +69,7 @@ namespace Unity.HLODSystem
             
             }
             isShowCommon = EditorGUILayout.BeginFoldoutHeaderGroup(isShowCommon, "Common");
-            if (isShowCommon == true)
+            if (isShowCommon)
             {
                 EditorGUILayout.PropertyField(m_TerrainDataProperty, Styles.SourceText);
                 EditorGUILayout.PropertyField(m_DestoryTerrainProperty, Styles.DestoryTerrainText);

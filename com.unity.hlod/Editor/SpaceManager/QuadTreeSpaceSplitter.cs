@@ -8,29 +8,29 @@ namespace Unity.HLODSystem.SpaceManager
 {
     public static class BoundsExtension
     {
-        public static bool IsPartOf(this Bounds bounds, Bounds target)
+        public static bool IsPartOf(this Bounds bounds, in Bounds target)
         {
-            return (double) bounds.min.x >= (double) target.min.x &&
-                   (double) bounds.max.x <= (double) target.max.x &&
-                   (double) bounds.min.y >= (double) target.min.y &&
-                   (double) bounds.max.y <= (double) target.max.y &&
-                   (double) bounds.min.z >= (double) target.min.z &&
-                   (double) bounds.max.z <= (double) target.max.z;
+            return bounds.min.x >= target.min.x &&
+                   bounds.max.x <= target.max.x &&
+                   bounds.min.y >= target.min.y &&
+                   bounds.max.y <= target.max.y &&
+                   bounds.min.z >= target.min.z &&
+                   bounds.max.z <= target.max.z;
         }
     }
+    
     public class QuadTreeSpaceSplitter : ISpaceSplitter
     {
-        
         [InitializeOnLoadMethod]
         static void RegisterType()
         {
             SpaceSplitterTypes.RegisterSpaceSplitterType(typeof(QuadTreeSpaceSplitter));
         }
 
-        private float m_looseSizeFromOptions;
+        float m_looseSizeFromOptions;
 
-        private bool m_useSubHLODTree;
-        private float m_subHLODTreeSize;
+        bool m_useSubHLODTree;
+        float m_subHLODTreeSize;
         
 
         public QuadTreeSpaceSplitter(SerializableDynamicObject spaceSplitterOptions)
@@ -99,7 +99,7 @@ namespace Unity.HLODSystem.SpaceManager
             List<GameObject> targetObjects, Action<float> onProgress)
         {
             List<SpaceNode> nodes = new List<SpaceNode>();
-            List<TargetInfo> targetInfos = CreateTargetInfoList(targetObjects, transform);
+            List<TargetInfo> targetInfos = InternalCreateTargetInfoList(targetObjects, transform);
 
             if (m_useSubHLODTree == true)
             {
@@ -123,7 +123,8 @@ namespace Unity.HLODSystem.SpaceManager
 
             return nodes;
         }
-        private SpaceNode CreateSpaceTreeImpl(Bounds initBounds, float chunkSize, List<TargetInfo> targetObjects, Action<float> onProgress)
+
+        SpaceNode CreateSpaceTreeImpl(Bounds initBounds, float chunkSize, List<TargetInfo> targetObjects, Action<float> onProgress)
         {
             float looseSize = CalcLooseSize(chunkSize);
             SpaceNode rootNode = new SpaceNode();
@@ -209,18 +210,24 @@ namespace Unity.HLODSystem.SpaceManager
             public Bounds Bounds;
         }
 
-        private List<TargetInfo> CreateTargetInfoList(List<GameObject> gameObjects, Transform transform)
+        List<TargetInfo> InternalCreateTargetInfoList(IReadOnlyCollection<GameObject> gameObjects, Transform transform)
         {
-            List<TargetInfo> targetInfos = new List<TargetInfo>(gameObjects.Count);
+            if (gameObjects == null || gameObjects.Count == 0)
+                return null;
+            
+            var gameObjectCount = gameObjects.Count;
+            
+            var targetInfos = new List<TargetInfo>(gameObjectCount);
 
-            for (int i = 0; i < gameObjects.Count; ++i)
+            foreach (var t in gameObjects)
             {
-                Bounds? bounds = CalculateBounds(gameObjects[i], transform);
+                var bounds = CalculateBounds(t, transform);
                 if ( bounds == null )
                     continue;
+                
                 targetInfos.Add(new TargetInfo()
                 {
-                    GameObject = gameObjects[i],
+                    GameObject = t,
                     Bounds = bounds.Value,
                 });
             }

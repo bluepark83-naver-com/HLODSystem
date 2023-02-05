@@ -14,28 +14,29 @@ namespace Unity.HLODSystem.Streaming
         //This method is only used during creation.
         //Because the GameObject may have been deleted in Runtime, it does not work.
         //So, explicitly make it available only in the Editor.
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         public abstract GameObject GetHighSceneObject(int id);
-        #endif
-        
+#endif
+
         public abstract void Install();
 
 
-        public abstract void OnStart();
-        public abstract void OnStop();
+        protected abstract void OnStart();
+        protected abstract void OnStop();
 
         public abstract int HighObjectCount { get; }
         public abstract int LowObjectCount { get; }
 
-        public abstract void LoadHighObject(int id,Action<GameObject> loadDoneCallback);
+        public abstract void LoadHighObject(int id, Action<GameObject> loadDoneCallback);
         public abstract void LoadLowObject(int id, Action<GameObject> loadDoneCallback);
-        
+
         public abstract void UnloadHighObject(int id);
         public abstract void UnloadLowObject(int id);
-        
+
         #endregion
-        
+
         #region Unity Events
+
         public void Awake()
         {
             m_spaceManager = new QuadTreeSpaceManager();
@@ -66,9 +67,11 @@ namespace Unity.HLODSystem.Streaming
             m_spaceManager = null;
             m_root = null;
         }
+
         #endregion
 
         #region Method
+
         class LoadInfo
         {
             public LoadManager.Handle Handle;
@@ -80,14 +83,16 @@ namespace Unity.HLODSystem.Streaming
                 {
                     callback?.Invoke(handle);
                 }
+
                 Callbacks.Clear();
             }
         }
-        
+
         private Dictionary<int, LoadInfo> m_createdHighObjects = new Dictionary<int, LoadInfo>();
         private Dictionary<int, LoadInfo> m_createdLowObjects = new Dictionary<int, LoadInfo>();
 
-        public LoadManager.Handle GetHighObject(int id, int level, float distance, Action<LoadManager.Handle> loadDoneCallback)
+        public LoadManager.Handle GetHighObject(int id, int level, float distance,
+            Action<LoadManager.Handle> loadDoneCallback)
         {
             LoadInfo loadInfo = null;
             //already processing object to load.
@@ -115,7 +120,8 @@ namespace Unity.HLODSystem.Streaming
             return loadInfo.Handle;
         }
 
-        public LoadManager.Handle GetLowObject(int id, int level, float distance, Action<LoadManager.Handle> loadDoneCallback)
+        public LoadManager.Handle GetLowObject(int id, int level, float distance,
+            Action<LoadManager.Handle> loadDoneCallback)
         {
             LoadInfo loadInfo = null;
             //already processing object to load.
@@ -164,7 +170,7 @@ namespace Unity.HLODSystem.Streaming
             m_createdLowObjects.Remove(handle.Id);
             LoadManager.Instance.UnloadLowObject(handle);
         }
-        
+
         public void UpdateCull(Camera camera)
         {
             if (m_spaceManager == null)
@@ -172,13 +178,21 @@ namespace Unity.HLODSystem.Streaming
 
             m_spaceManager.UpdateCamera(this.transform, camera);
 
-            if ( m_controlMode == Mode.AutoControl)
-                m_root.Cull(m_spaceManager.IsCull(m_cullDistance, m_root.Bounds));
-            else if (m_controlMode == Mode.ManualControl && m_manualLevel < 0 )
-                m_root.Cull(true);
-            else
-                m_root.Cull(false);
-            
+            switch (m_controlMode)
+            {
+                case Mode.AutoControl:
+                    m_root.Cull(m_spaceManager.IsCull(m_cullDistance, m_root.Bounds));
+                    break;
+                case Mode.ManualControl when m_manualLevel < 0:
+                    m_root.Cull(true);
+                    break;
+                case Mode.DisableHLOD:
+                    break;
+                default:
+                    m_root.Cull(false);
+                    break;
+            }
+
             m_root.Update(m_controlMode, m_manualLevel, m_lodDistance);
         }
 
@@ -186,14 +200,16 @@ namespace Unity.HLODSystem.Streaming
         {
             return Root.IsLoadDone();
         }
+
         public int GetNodeCount()
         {
             return m_treeNodeContainer.Count;
         }
+
         public int GetReadyNodeCount()
         {
-            int count = 0;
-            for ( int i = 0; i < m_treeNodeContainer.Count; ++i )
+            var count = 0;
+            for (var i = 0; i < m_treeNodeContainer.Count; ++i)
             {
                 var node = m_treeNodeContainer.Get(i);
                 if (node.IsNodeReadySelf())
@@ -216,41 +232,36 @@ namespace Unity.HLODSystem.Streaming
         #endregion
 
         #region variables
+
         private ISpaceManager m_spaceManager;
 
-        [SerializeField] 
-        private HLODTreeNodeContainer m_treeNodeContainer;
-        [SerializeField]
-        private HLODTreeNode m_root;
+        [SerializeField] HLODTreeNodeContainer m_treeNodeContainer;
+        [SerializeField] HLODTreeNode m_root;
 
-        [SerializeField] private float m_cullDistance;
-        [SerializeField] private float m_lodDistance;
-        
-        [SerializeField]
-        private int m_controllerID;
+        [SerializeField] float m_cullDistance;
+        [SerializeField] float m_lodDistance;
 
-        [SerializeField] 
-        private UserDataSerializerBase m_userDataSerializer;
+        [SerializeField] int m_controllerID;
 
-        [SerializeField]
-        private Mode m_controlMode = Mode.AutoControl;
-        [SerializeField]
-        [Range(-1, 10)] //< TODO: It should input suitable value, max level, to maximum range.
-        private int m_manualLevel = 0;
+        [SerializeField] UserDataSerializerBase m_userDataSerializer;
+
+        [SerializeField] Mode m_controlMode = Mode.AutoControl;
+
+        [SerializeField] [Range(-1, 10)] //< TODO: It should input suitable value, max level, to maximum range.
+        int m_manualLevel = 0;
 
         public enum Mode
         {
             DisableHLOD,
             ManualControl,
             AutoControl,
-            
         }
 
         public HLODTreeNodeContainer Container
         {
             set
             {
-                m_treeNodeContainer = value; 
+                m_treeNodeContainer = value;
                 UpdateContainer();
             }
             get { return m_treeNodeContainer; }
@@ -258,48 +269,42 @@ namespace Unity.HLODSystem.Streaming
 
         public UserDataSerializerBase UserDataserializer
         {
-            set
-            {
-                m_userDataSerializer = value;
-            }
-            get
-            {
-                return m_userDataSerializer;
-            }
+            set => m_userDataSerializer = value;
+            get => m_userDataSerializer;
         }
 
         public int ControllerID
         {
-            set { m_controllerID = value;}
-            get { return m_controllerID; }
+            set => m_controllerID = value;
+            get => m_controllerID;
         }
 
         public HLODTreeNode Root
         {
             set
             {
-                m_root = value; 
+                m_root = value;
                 UpdateContainer();
             }
-            get { return m_root; }
+            get => m_root;
         }
 
         public float CullDistance
         {
-            set { m_cullDistance = value; }
-            get { return m_cullDistance; }
+            set => m_cullDistance = value;
+            get => m_cullDistance;
         }
 
         public float LODDistance
         {
-            set { m_lodDistance = value; }
-            get { return m_lodDistance; }
+            set => m_lodDistance = value;
+            get => m_lodDistance;
         }
+
         #endregion
 
         public void OnBeforeSerialize()
         {
-            
         }
 
         public void OnAfterDeserialize()
@@ -307,13 +312,9 @@ namespace Unity.HLODSystem.Streaming
             UpdateContainer();
         }
 
-        private void UpdateContainer()
+        void UpdateContainer()
         {
-            if (m_root == null)
-                return;
-            
-            m_root.SetContainer(m_treeNodeContainer);
+            m_root?.SetContainer(m_treeNodeContainer);
         }
     }
-
 }

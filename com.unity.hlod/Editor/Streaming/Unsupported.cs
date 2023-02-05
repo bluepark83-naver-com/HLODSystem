@@ -61,6 +61,10 @@ namespace Unity.HLODSystem.Streaming
         private SerializableDynamicObject m_streamingOptions;
         private int m_controllerID;
 
+        public Unsupported()
+        {
+        }
+
         public Unsupported(IGeneratedResourceManager manager, int controllerID, SerializableDynamicObject streamingOptions)
         {
             m_manager = manager;
@@ -390,20 +394,20 @@ namespace Unity.HLODSystem.Streaming
             }
             EditorGUILayout.EndHorizontal();
 
-            if (showFormat = EditorGUILayout.Foldout(showFormat, "Compress Format"))
+            if (showFormat == EditorGUILayout.Foldout(showFormat, "Compress Format"))
             {
                 EditorGUI.indentLevel += 1;
                 options.PCCompression = PopupFormat("PC & Console", (TextureFormat)options.PCCompression);
-                options.WebGLCompression = PopupFormat("WebGL", (TextureFormat)options.WebGLCompression);
+                //options.WebGLCompression = PopupFormat("WebGL", (TextureFormat)options.WebGLCompression);
                 options.AndroidCompression = PopupFormat("Android", (TextureFormat)options.AndroidCompression);
                 options.iOSCompression = PopupFormat("iOS", (TextureFormat)options.iOSCompression);
-                options.tvOSCompression = PopupFormat("tvOS", (TextureFormat)options.tvOSCompression);
+                //options.tvOSCompression = PopupFormat("tvOS", (TextureFormat)options.tvOSCompression);
                 EditorGUI.indentLevel -= 1;   
             }
 
         }
 
-        private static TextureFormat PopupFormat(string label, TextureFormat format)
+        static TextureFormat PopupFormat(string label, TextureFormat format)
         {
             int selectIndex = Array.IndexOf(Styles.SupportTextureFormats, format);
             selectIndex = EditorGUILayout.Popup(label, selectIndex, Styles.SupportTextureFormatStrings);

@@ -1,46 +1,37 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Unity.HLODSystem.Streaming
 {
-    public class DefaultHLODController : HLODControllerBase
+    public partial class DefaultHLODController : HLODControllerBase
     {
-        [SerializeField]
-        private List<GameObject> m_gameObjectList = new List<GameObject>();
-        [SerializeField]
-        private List<GameObject> m_lowGameObjects = new List<GameObject>();
+        [SerializeField] List<GameObject> m_gameObjectList = new List<GameObject>();
+        [SerializeField] List<GameObject> m_lowGameObjects = new List<GameObject>();
         
 
         public int AddHighObject(GameObject gameObject)
         {
-            int id = m_gameObjectList.Count;
+            var id = m_gameObjectList.Count;
             m_gameObjectList.Add(gameObject);
             return id;
         }
 
         public int AddLowObject(GameObject gameObject)
         {
-            int id = m_lowGameObjects.Count;
+            var id = m_lowGameObjects.Count;
             m_lowGameObjects.Add(gameObject);
             return id;
         }
-        public override int HighObjectCount { get => m_gameObjectList.Count; }
-        public override int LowObjectCount { get => m_lowGameObjects.Count; }
+        public override int HighObjectCount => m_gameObjectList.Count;
+        public override int LowObjectCount => m_lowGameObjects.Count;
 
-        #if UNITY_EDITOR
-        public override GameObject GetHighSceneObject(int id)
-        {
-            return m_gameObjectList[id];
-        }
-        #endif
-        public override void OnStart()
+        protected override void OnStart()
         {
 
         }
 
-        public override void OnStop()
+        protected override void OnStop()
         {
 
         }

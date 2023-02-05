@@ -1,68 +1,61 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Unity.HLODSystem.SpaceManager
 {
     public class QuadTreeSpaceManager : ISpaceManager
     {
+        float _preRelative;
+        Vector3 _camPosition;
 
-        private float preRelative;
-        private Vector3 camPosition;
-        public QuadTreeSpaceManager()
-        {
-        }
         public void UpdateCamera(Transform hlodTransform, Camera cam)
         {
             if (cam.orthographic)
             {
-                preRelative = 0.5f / cam.orthographicSize;
+                _preRelative = 0.5f / cam.orthographicSize;
             }
             else
             {
-                float halfAngle = Mathf.Tan(Mathf.Deg2Rad * cam.fieldOfView * 0.5F);
-                preRelative = 0.5f / halfAngle;
+                var halfAngle = Mathf.Tan(Mathf.Deg2Rad * cam.fieldOfView * 0.5F);
+                _preRelative = 0.5f / halfAngle;
             }
-            preRelative = preRelative * QualitySettings.lodBias;
-            camPosition = hlodTransform.worldToLocalMatrix.MultiplyPoint(cam.transform.position);
+
+            _preRelative = _preRelative * QualitySettings.lodBias;
+            _camPosition = hlodTransform.worldToLocalMatrix.MultiplyPoint(cam.transform.position);
         }
 
-        public bool IsHigh(float lodDistance, Bounds bounds)
+        public bool IsHigh(float lodDistance, in Bounds bounds)
         {
             //float distance = 1.0f;
             //if (cam.orthographic == false)
-            
-                float distance = GetDistance(bounds.center, camPosition);
-            float relativeHeight = bounds.size.x * preRelative / distance;
+
+            var distance = GetDistance(bounds.center, _camPosition);
+            var relativeHeight = bounds.size.x * _preRelative / distance;
             return relativeHeight > lodDistance;
         }
 
-        public float GetDistanceSqure(Bounds bounds)
+        public float GetDistanceSqure(in Bounds bounds)
         {
-            float x = bounds.center.x - camPosition.x;
-            float z = bounds.center.z - camPosition.z;
+            var x = bounds.center.x - _camPosition.x;
+            var z = bounds.center.z - _camPosition.z;
 
-            float square = x * x + z * z;
+            var square = x * x + z * z;
             return square;
         }
-        
-        public bool IsCull(float cullDistance, Bounds bounds)
-        {
-            float distance = GetDistance(bounds.center, camPosition);
 
-            float relativeHeight = bounds.size.x * preRelative / distance;
+        public bool IsCull(float cullDistance, in Bounds bounds)
+        {
+            var distance = GetDistance(bounds.center, _camPosition);
+
+            var relativeHeight = bounds.size.x * _preRelative / distance;
             return relativeHeight < cullDistance;
         }
 
-        private float GetDistance(Vector3 boundsPos, Vector3 camPos)
+        float GetDistance(in Vector3 boundsPos, in Vector3 camPos)
         {
-            float x = boundsPos.x - camPos.x;
-            float z = boundsPos.z - camPos.z;
-            float square = x * x + z * z;
+            var x = boundsPos.x - camPos.x;
+            var z = boundsPos.z - camPos.z;
+            var square = x * x + z * z;
             return Mathf.Sqrt(square);
         }
-
-       
     }
-
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -8,10 +7,7 @@ namespace Unity.HLODSystem
 {
     public class TerrainHLOD : MonoBehaviour, ISerializationCallbackReceiver, IGeneratedResourceManager
     {
-        private Type m_SimplifierType;
-        private Type m_StreamingType;
-
-        [SerializeField] private string m_SimplifierTypeStr = "";
+        [SerializeField] string m_SimplifierTypeStr = "";
         [SerializeField] private string m_StreamingTypeStr = "";
 
         [SerializeField] private TerrainData m_TerrainData;
@@ -39,147 +35,106 @@ namespace Unity.HLODSystem
         [SerializeField]
         private List<GameObject> m_convertedPrefabObjects = new List<GameObject>();
         
-        public Type SimplifierType
-        {
-            set { m_SimplifierType = value; }
-            get { return m_SimplifierType; }
-        }
+        public Type SimplifierType { set; get; }
 
-        public Type StreamingType
-        {
-            set { m_StreamingType = value; }
-            get { return m_StreamingType; }
-        }
+        public Type StreamingType { set; get; }
 
         public TerrainData TerrainData
         {
-            set { m_TerrainData = value;}
-            get { return m_TerrainData; }
+            set => m_TerrainData = value;
+            get => m_TerrainData;
         }
-        public bool DestroyTerrain
-        {
-            set { m_DestroyTerrain = value; }
-            get { return m_DestroyTerrain; }
-        }
+        public bool DestroyTerrain => m_DestroyTerrain;
+
         public float ChunkSize
         {
-            get { return m_ChunkSize; }
-            set { m_ChunkSize = value; }
+            get => m_ChunkSize;
+            set => m_ChunkSize = value;
         }
 
         public int BorderVertexCount
         {
-            get { return m_BorderVertexCount; }
-            set { m_BorderVertexCount = value; }
+            get => m_BorderVertexCount;
+            set => m_BorderVertexCount = value;
         }
 
         public float LODDistance
         {
-            get { return m_LODDistance; }
-            set { m_LODDistance = value; }
+            get => m_LODDistance;
+            set => m_LODDistance = value;
         }
 
-        public float CullDistance
-        {
-            get { return m_CullDistance; }
-            set { m_CullDistance = value; }
-        }
-        
-        public SerializableDynamicObject SimplifierOptions
-        {
-            get { return m_SimplifierOptions; }
-        }
+        public float CullDistance => m_CullDistance;
 
-        public SerializableDynamicObject StreamingOptions
-        {
-            get { return m_StreamingOptions; }
-        }
+        public SerializableDynamicObject SimplifierOptions => m_SimplifierOptions;
+
+        public SerializableDynamicObject StreamingOptions => m_StreamingOptions;
 
         public int TextureSize
         {
-            set { m_textureSize = value; }
-            get { return m_textureSize; }
+            set => m_textureSize = value;
+            get => m_textureSize;
         }
 
         public string MaterialGUID
         {
-            set { m_materialGUID = value; }
-            get { return m_materialGUID; }
+            set => m_materialGUID = value;
+            get => m_materialGUID;
         }
 
         public string MaterialLowGUID
         {
-            set { m_materialLowGUID = value; }
-            get { return m_materialLowGUID; }
+            set => m_materialLowGUID = value;
+            get => m_materialLowGUID;
         }
 
         public bool UseNormal
         {
-            set { m_useNormal = value; }
-            get { return m_useNormal; }
+            set => m_useNormal = value;
+            get => m_useNormal;
         }
 
         public bool UseMask
         {
-            set { m_useMask = value; }
-            get { return m_useMask; }
+            set => m_useMask = value;
+            get => m_useMask;
         }
 
         public string AlbedoPropertyName
         {
-            set { m_albedoPropertyName = value; }
-            get { return m_albedoPropertyName; }
+            set => m_albedoPropertyName = value;
+            get => m_albedoPropertyName;
         }
 
         public string NormalPropertyName
         {
-            set { m_normalPropertyName = value; }
-            get { return m_normalPropertyName; }
+            set => m_normalPropertyName = value;
+            get => m_normalPropertyName;
         }
 
         public string MaskPropertyName
         {
-            set { m_maskPropertyName = value; }
-            get { return m_maskPropertyName; }
+            set => m_maskPropertyName = value;
+            get => m_maskPropertyName;
         }
         
-        public List<Object> GeneratedObjects
-        {
-            get { return m_generatedObjects; }
-        }
-        public List<GameObject> ConvertedPrefabObjects
-        {
-            get { return m_convertedPrefabObjects; }
-        }
-        
+        public List<Object> GeneratedObjects => m_generatedObjects;
+
+        public List<GameObject> ConvertedPrefabObjects => m_convertedPrefabObjects;
+
         public void OnBeforeSerialize()
         {
-            if (m_SimplifierType != null)
-                m_SimplifierTypeStr = m_SimplifierType.AssemblyQualifiedName;
-            if (m_StreamingType != null)
-                m_StreamingTypeStr = m_StreamingType.AssemblyQualifiedName;
+            if (SimplifierType != null)
+                m_SimplifierTypeStr = SimplifierType.AssemblyQualifiedName;
+            if (StreamingType != null)
+                m_StreamingTypeStr = StreamingType.AssemblyQualifiedName;
         }
 
         public void OnAfterDeserialize()
         {
-            if (string.IsNullOrEmpty(m_SimplifierTypeStr))
-            {
-                m_SimplifierType = null;
-            }
-            else
-            {
-                m_SimplifierType = Type.GetType(m_SimplifierTypeStr);
-            }
+            SimplifierType = string.IsNullOrEmpty(m_SimplifierTypeStr) ? null : Type.GetType(m_SimplifierTypeStr);
 
-            if (string.IsNullOrEmpty(m_StreamingTypeStr))
-            {
-                m_StreamingType = null;
-            }
-            else
-            {
-                m_StreamingType = Type.GetType(m_StreamingTypeStr);
-            }
-
+            StreamingType = string.IsNullOrEmpty(m_StreamingTypeStr) ? null : Type.GetType(m_StreamingTypeStr);
         }
 
         public void AddGeneratedResource(Object obj)
@@ -199,9 +154,7 @@ namespace Unity.HLODSystem
         
         public Bounds GetBounds()
         {
-            if ( m_TerrainData == null )
-                return new Bounds();
-            return new Bounds(m_TerrainData.size * 0.5f, m_TerrainData.size);
+            return m_TerrainData == null ? new Bounds() : new Bounds(m_TerrainData.size * 0.5f, m_TerrainData.size);
         }
 
     }

@@ -13,57 +13,39 @@ namespace Unity.HLODSystem
     [Serializable]
     public class HLODTreeNode
     {
-        [SerializeField] 
-        private int m_level;
-        [SerializeField]
-        private Bounds m_bounds;
+        [SerializeField] int m_level;
+        [SerializeField] Bounds m_bounds;
         
-        [NonSerialized]
-        private HLODTreeNodeContainer m_container;
-        [SerializeField]
-        private List<int> m_childTreeNodeIds = new List<int>();
+        [NonSerialized] HLODTreeNodeContainer m_container;
+        [SerializeField] List<int> m_childTreeNodeIds = new List<int>();
 
-        [SerializeField]
-        private List<int> m_highObjectIds = new List<int>();
-        [SerializeField]
-        private List<int> m_lowObjectIds = new List<int>();
+        [SerializeField] List<int> m_highObjectIds = new List<int>();
+        [SerializeField] List<int> m_lowObjectIds = new List<int>();
 
-        private Dictionary<int, LoadManager.Handle> m_highObjects = new Dictionary<int, LoadManager.Handle>();
-        private Dictionary<int, LoadManager.Handle> m_lowObjects = new Dictionary<int, LoadManager.Handle>();
+        Dictionary<int, LoadManager.Handle> m_highObjects = new Dictionary<int, LoadManager.Handle>();
+        Dictionary<int, LoadManager.Handle> m_lowObjects = new Dictionary<int, LoadManager.Handle>();
 
-        private Dictionary<int, LoadManager.Handle> m_loadedHighObjects;
-        private Dictionary<int, LoadManager.Handle> m_loadedLowObjects;
+        Dictionary<int, LoadManager.Handle> m_loadedHighObjects;
+        Dictionary<int, LoadManager.Handle> m_loadedLowObjects;
 
         public int Level
         {
-            set { m_level = value; }
-            get { return m_level; }
+            set => m_level = value;
+            get => m_level;
         }
         public Bounds Bounds
         {
-            set { m_bounds = value; }
-            get { return m_bounds; }
+            set => m_bounds = value;
+            get => m_bounds;
         }
 
-        public List<int> HighObjectIds
-        {
-            get { return m_highObjectIds; }
-        }
+        public List<int> HighObjectIds => m_highObjectIds;
 
-        public List<int> LowObjectIds
-        {
-            get { return m_lowObjectIds; }
-        }
+        public List<int> LowObjectIds => m_lowObjectIds;
 
-        public State ExprectedState
-        {
-            get { return m_expectedState; }
-        }
+        public State ExprectedState => m_expectedState;
 
-        public State CurrentState
-        {
-            get { return m_fsm.CurrentState; }
-        }
+        public State CurrentState => m_fsm.CurrentState;
 
         public enum State
         {
@@ -72,38 +54,28 @@ namespace Unity.HLODSystem
             High,
         }
 
-        private FSM<State> m_fsm = new FSM<State>();
-        private State m_expectedState = State.Release;
+        FSM<State> m_fsm = new FSM<State>();
+        State m_expectedState = State.Release;
 
-        private HLODControllerBase m_controller;
-        private UserDataSerializerBase m_userDataSerializer;
-        private ISpaceManager m_spaceManager;
-        private HLODTreeNode m_parent;
+        HLODControllerBase m_controller;
+        UserDataSerializerBase m_userDataSerializer;
+        ISpaceManager m_spaceManager;
+        HLODTreeNode m_parent;
 
-        private float m_boundsLength;
-        private float m_distance;
-        
-        private bool m_isVisible;
-        private bool m_isVisibleHierarchy;
+        float m_boundsLength;
+        float m_distance;
 
-        public HLODControllerBase Controller
-        {
-            get
-            {
-                return m_controller;
-            }
-        }
-        
+        bool m_isVisible;
+        bool m_isVisibleHierarchy;
 
-        public HLODTreeNode()
-        {
-        }
+        public HLODControllerBase Controller => m_controller;
+
 
         public void SetContainer(HLODTreeNodeContainer container)
         {
             m_container = container;
             
-            for (int i = 0; i < m_childTreeNodeIds.Count; ++i)
+            for (var i = 0; i < m_childTreeNodeIds.Count; ++i)
             {
                 var childTreeNode = m_container.Get(m_childTreeNodeIds[i]);
                 childTreeNode.SetContainer(container);
@@ -114,7 +86,7 @@ namespace Unity.HLODSystem
             ClearChildTreeNode();
             m_childTreeNodeIds.Capacity = childNodes.Count;
 
-            for (int i = 0; i < childNodes.Count; ++i)
+            for (var i = 0; i < childNodes.Count; ++i)
             {
                 int id = m_container.Add(childNodes[i]);
                 m_childTreeNodeIds.Add(id);
@@ -122,10 +94,7 @@ namespace Unity.HLODSystem
             }
         }
 
-        public int GetChildTreeNodeCount()
-        {
-            return m_childTreeNodeIds.Count;
-        }
+        public int GetChildTreeNodeCount() => m_childTreeNodeIds.Count;
 
         public HLODTreeNode GetChildTreeNode(int index)
         {
@@ -135,7 +104,7 @@ namespace Unity.HLODSystem
 
         public void ClearChildTreeNode()
         {
-            for (int i = 0; i < m_childTreeNodeIds.Count; ++i)
+            for (var i = 0; i < m_childTreeNodeIds.Count; ++i)
             {
                 m_container.Remove(m_childTreeNodeIds[i]);
             }
@@ -145,7 +114,6 @@ namespace Unity.HLODSystem
 
         public void Initialize(HLODControllerBase controller, ISpaceManager spaceManager, HLODTreeNode parent)
         {
-
             for (int i = 0; i < m_childTreeNodeIds.Count; ++i)
             {
                 var childTreeNode = m_container.Get(m_childTreeNodeIds[i]);
@@ -187,29 +155,28 @@ namespace Unity.HLODSystem
             if (m_fsm.LastState != m_fsm.CurrentState)
                 return false;
 
-            if (m_fsm.CurrentState == State.High)
+            switch (m_fsm.CurrentState)
             {
-                for (int i = 0; i < m_childTreeNodeIds.Count; ++i)
+                case State.High:
                 {
-                    var childTreeNode = m_container.Get(m_childTreeNodeIds[i]);
-                    if ( childTreeNode.IsLoadDone() == false )
-                        return false;
+                    foreach (var t in m_childTreeNodeIds)
+                    {
+                        var childTreeNode = m_container.Get(t);
+                        if ( childTreeNode.IsLoadDone() == false )
+                            return false;
+                    }
+
+                    return m_highObjectIds.Count == m_highObjects.Count;
                 }
-                
-                return m_highObjectIds.Count == m_highObjects.Count;
+                case State.Low:
+                    return m_lowObjectIds.Count == m_lowObjects.Count;
+                case State.Release:
+                default:
+                    return true;
             }
-            else if ( m_fsm.CurrentState == State.Low)
-            {
-                return m_lowObjectIds.Count == m_lowObjects.Count;
-            }
-
-            return true;
         }
 
-        public bool IsNodeReadySelf()
-        {
-            return m_expectedState == m_fsm.CurrentState;
-        }
+        public bool IsNodeReadySelf() => m_expectedState == m_fsm.CurrentState;
 
         public int GetReadyNodeCount()
         {
@@ -222,20 +189,19 @@ namespace Unity.HLODSystem
 
             if (m_fsm.LastState == State.Release)
                 return readyNodeCount + 1;
+            
             if (m_fsm.LastState == State.Low)
             {
                 if (IsReadyToEnterLow())
                     return readyNodeCount + 1;
-                else
-                    return readyNodeCount;
+                return readyNodeCount;
             }
             if ( m_fsm.CurrentState == State.High)
             {
                 if (IsReadyToEnterHigh())
                     return readyNodeCount + 1;
-                else
-                    return readyNodeCount;
-                
+                return readyNodeCount;
+
             }
             return readyNodeCount;
         }
@@ -267,7 +233,7 @@ namespace Unity.HLODSystem
         
         void OnEnteredRelease()
         {
-            for (int i = 0; i < m_childTreeNodeIds.Count; ++i)
+            for (var i = 0; i < m_childTreeNodeIds.Count; ++i)
             {
                 var childTreeNode = m_container.Get(m_childTreeNodeIds[i]);
                 childTreeNode.m_isVisible = false;
@@ -277,8 +243,7 @@ namespace Unity.HLODSystem
 
         void OnEnteringLow()
         {
-            if ( m_loadedLowObjects == null ) 
-                m_loadedLowObjects = new Dictionary<int, LoadManager.Handle>();
+            m_loadedLowObjects ??= new Dictionary<int, LoadManager.Handle>();
             
             if (m_lowObjects.Count == m_lowObjectIds.Count)
                 return;
@@ -420,37 +385,42 @@ namespace Unity.HLODSystem
 
             var beforeState = m_fsm.CurrentState;
 
-            if (mode == HLODControllerBase.Mode.DisableHLOD)
+            switch (mode)
             {
-                m_expectedState = State.High;
-            }
-            else if (mode == HLODControllerBase.Mode.ManualControl)
-            {
-                //Tree nodes suitable for the manual level must be calculated and displayed.
-                m_expectedState = State.Release;
-                if (manualLevel >= 0 && m_level < manualLevel)
-                {
+                case HLODControllerBase.Mode.DisableHLOD:
                     m_expectedState = State.High;
-                }
-                else if (m_level == manualLevel)
+                    break;
+                case HLODControllerBase.Mode.ManualControl:
                 {
-                    m_expectedState = State.Low;
-                }
-            }
-            else
-            {
-                //Change state if a change to another state is needed immediately after changing the state.
-                m_expectedState = m_spaceManager.IsHigh(lodDistance, m_bounds) ? State.High : State.Low;
-
-                if (m_parent != null)
-                {
-                    if (m_parent.ExprectedState == State.Release || m_parent.ExprectedState == State.Low)
+                    //Tree nodes suitable for the manual level must be calculated and displayed.
+                    m_expectedState = State.Release;
+                    if (manualLevel >= 0 && m_level < manualLevel)
                     {
-                        m_expectedState = State.Release;
+                        m_expectedState = State.High;
                     }
+                    else if (m_level == manualLevel)
+                    {
+                        m_expectedState = State.Low;
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    //Change state if a change to another state is needed immediately after changing the state.
+                    m_expectedState = m_spaceManager.IsHigh(lodDistance, m_bounds) ? State.High : State.Low;
+
+                    if (m_parent != null)
+                    {
+                        if (m_parent.ExprectedState == State.Release || m_parent.ExprectedState == State.Low)
+                        {
+                            m_expectedState = State.Release;
+                        }
+                    }
+
+                    break;
                 }
             }
-
 
             do
             {
@@ -500,9 +470,9 @@ namespace Unity.HLODSystem
                 return;
             
             HLODTreeNodeRenderer.Instance.Render(this, transform, Color.yellow, 3.0f);
-        }*/        
+        }*/
 
-        private void UpdateVisible()
+        void UpdateVisible()
         {
             if (m_parent != null)
             {
@@ -523,7 +493,5 @@ namespace Unity.HLODSystem
                 item.Value.LoadedObject.SetActive(m_isVisibleHierarchy);
             }
         }
-
     }
-
 }

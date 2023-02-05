@@ -1,19 +1,15 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Unity.HLODSystem.SpaceManager
 {
-
     public interface ISpaceManager
     {
         void UpdateCamera(Transform hlodTransform, Camera cam);
 
-        bool IsHigh(float lodDistance, Bounds bounds);
+        bool IsHigh(float lodDistance, in Bounds bounds);
 
-        bool IsCull(float cullDistance, Bounds bounds);
+        bool IsCull(float cullDistance, in Bounds bounds);
 
-        float GetDistanceSqure(Bounds bounds);
+        float GetDistanceSqure(in Bounds bounds);
     }
-
 }
